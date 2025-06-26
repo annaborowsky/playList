@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras de Mercado</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #itemInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 16px;
+        }
+        #quantityInput {
+            width: 80px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-left: none;
+            text-align: center;
+        }
+        #categoryInput {
+            width: 150px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-left: none;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2ecc71;
+        }
+        .shopping-list {
+            margin-top: 30px;
+        }
+        .category {
+            margin-bottom: 25px;
+        }
+        .category h2 {
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+            color: #3498db;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .item:hover {
+            background-color: #e9ecef;
+        }
+        .item-info {
+            display: flex;
+            align-items: center;
+        }
+        .item-quantity {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #e67e22;
+        }
+        .item-name {
+            flex: 1;
+        }
+        .item-actions button {
+            background-color: #e74c3c;
+            border-radius: 4px;
+            padding: 6px 12px;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+        .item-actions button:hover {
+            background-color: #c0392b;
+        }
+        .item-actions button.edit {
+            background-color: #3498db;
+        }
+        .item-actions button.edit:hover {
+            background-color: #2980b9;
+        }
+        .empty-message {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Lista de Compras de Mercado</h1>
+        
+        <div class="input-group">
+            <input type="text" id="itemInput" placeholder="O que você precisa comprar?">
+            <input type="number" id="quantityInput" placeholder="Qtd" min="1" value="1">
+            <select id="categoryInput">
+                <option value="Padaria">Padaria</option>
+                <option value="Hortifruti">Hortifruti</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Laticínios">Laticínios</option>
+                <option value="Limpeza">Limpeza</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Outros">Outros</option>
+            </select>
+            <button onclick="addItem()">Adicionar</button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <!-- As estatísticas serão inseridas aqui pelo JavaScript -->
+        </div>
+        
+        <div class="shopping-list" id="shoppingList">
+            <!-- Os itens serão inseridos aqui pelo JavaScript -->
+            <p class="empty-message">Sua lista de compras está vazia. Adicione alguns itens!</p>
+        </div>
+    </div>
+
+    <script>
+        // Carrega a lista quando a página é aberta
+        document.addEventListener('DOMContentLoaded', loadShoppingList);
+        
+        // Adiciona um item à lista
+        function addItem() {
+            const itemInput = document.getElementById('itemInput');
+            const quantityInput = document.getElementById('quantityInput');
+            const categoryInput = document.getElementById('categoryInput');
+            
+            const itemName = itemInput.value.trim();
+            const quantity = quantityInput.value;
+            const category = categoryInput.value;
+            
+            if (itemName === '') {
+                alert('Por favor, digite o nome do item!');
+                return;
+            }
+            
+            if (quantity <= 0) {
+                alert('A quantidade deve ser maior que zero!');
+                return;
+            }
+            
+            // Cria um novo item
+            const newItem = {
+                id: Date.now(), // Usa o timestamp como ID único
+                name: itemName,
+                quantity: quantity,
+                category: category,
+                completed: false
+            };
+            
+            // Salva no Local Storage
+            saveItem(newItem);
+            
+            // Limpa os campos de entrada
+            itemInput.value = '';
+            quantityInput.value = '1';
+            itemInput.focus();
+            
+            // Recarrega a lista
+            loadShoppingList();
+        }
+        
+        // Salva um item no Local Storage
+        function saveItem(item) {
+            let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            shoppingList.push(item);
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+        }
+        
+        // Carrega a lista de compras
+        function loadShoppingList() {
+            const shoppingListElement = document.getElementById('shoppingList');
+            const statsElement = document.getElementById('stats');
+            
+            let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            
+            if (shoppingList.length === 0) {
+                shoppingListElement.innerHTML = '<p class="empty-message">Sua lista de compras está vazia. Adicione alguns itens!</p>';
+                statsElement.innerHTML = '<p>Você tem 0 itens na sua lista de compras.</p>';
+                return;
+            }
+            
+            // Agrupa itens por categoria
+            const itemsByCategory = {};
+            shoppingList.forEach(item => {
+                if (!itemsByCategory[item.category]) {
+                    itemsByCategory[item.category] = [];
+                }
+                itemsByCategory[item.category].push(item);
+            });
+            
+            // Ordena as categorias
+            const categories = Object.keys(itemsByCategory).sort();
+            
+            // Gera o HTML para cada categoria
+            let html = '';
+            let totalItems = 0;
+            let completedItems = 0;
+            
+            categories.forEach(category => {
+                html += `<div class="category">
+                            <h2>${category}</h2>`;
+                
+                itemsByCategory[category].forEach(item => {
+                    totalItems++;
+                    if (item.completed) completedItems++;
+                    
+                    html += `<div class="item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
+                                <div class="item-info">
+                                    <span class="item-quantity">${item.quantity}x</span>
+                                    <span class="item-name" style="text-decoration: ${item.completed ? 'line-through' : 'none'}; 
+                                          color: ${item.completed ? '#95a5a6' : 'inherit'}">${item.name}</span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="edit" onclick="toggleComplete(${item.id})">${item.completed ? 'Desfazer' : 'Comprar'}</button>
+                                    <button onclick="removeItem(${item.id})">Remover</button>
+                                </div>
+                            </div>`;
+                });
+                
+                html += `</div>`;
+            });
+            
+            shoppingListElement.innerHTML = html;
+            
+            // Atualiza estatísticas
+            statsElement.innerHTML = `
+                <p>Você tem ${totalItems} itens na sua lista (${completedItems} comprados).</p>
+                <button onclick="clearCompleted()">Limpar itens comprados</button>
+                <button onclick="clearAll()" style="background-color: #e74c3c">Limpar toda a lista</button>
+            `;
+        }
+        
+        // Remove um item da lista
+        function removeItem(id) {
+            let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            shoppingList = shoppingList.filter(item => item.id !== id);
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            loadShoppingList();
+        }
+        
+        // Alterna entre completo/não completo
+        function toggleComplete(id) {
+            let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+            shoppingList = shoppingList.map(item => {
+                if (item.id === id) {
+                    return {...item, completed: !item.completed};
+                }
+                return item;
+            });
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            loadShoppingList();
+        }
+        
+        // Limpa os itens marcados como completos
+        function clearCompleted() {
+            if (confirm('Tem certeza que deseja remover todos os itens comprados?')) {
+                let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+                shoppingList = shoppingList.filter(item => !item.completed);
+                localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+                loadShoppingList();
+            }
+        }
+        
+        // Limpa toda a lista
+        function clearAll() {
+            if (confirm('Tem certeza que deseja limpar TODA a lista de compras?')) {
+                localStorage.removeItem('shoppingList');
+                loadShoppingList();
+            }
+        }
+        
+        // Permite adicionar itens pressionando Enter
+        document.getElementById('itemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addItem();
+            }
+        });
+    </script>
+</body>
+</html>
